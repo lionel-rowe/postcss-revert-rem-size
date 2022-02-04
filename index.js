@@ -15,7 +15,7 @@ module.exports = (opts = {}) => {
 					rule.walk((node) => {
 						if (node.prop === 'font-size') {
 							if (/^\d+(?:\.\d+)?%$/.test(node.value)) {
-								multiplier = 100 / parseFloat(node.value)
+								multiplier = 1 / (100 / parseFloat(node.value))
 
 								node.remove()
 							}
@@ -28,7 +28,7 @@ module.exports = (opts = {}) => {
 				rule.walk((node) => {
 					node.value = node.value?.replace(remMatcher, (x) => {
 						const raw = multiplier * parseFloat(x)
-						const rounded = parseFloat(raw.toFixed(3))
+						const rounded = parseFloat(raw.toFixed(5))
 
 						return `${rounded}rem`
 					})
