@@ -9,27 +9,31 @@ module.exports = (opts = {}) => {
 	return {
 		postcssPlugin: 'postcss-revert-rem-size',
 
-		Rule(rule) {
-			if (['html', ':root'].includes(rule.selector)) {
-				for (const node of rule.nodes) {
-					if (node.prop === 'font-size') {
-						if (/^\d+(?:\.\d+)?%$/.test(node.value)) {
-							multiplier = 100 / parseFloat(node.value)
+		Root(root) {
+			root.walkRules((rule) => {
+				if (['html', ':root'].includes(rule.selector)) {
+					rule.walk((node) => {
+						if (node.prop === 'font-size') {
+							if (/^\d+(?:\.\d+)?%$/.test(node.value)) {
+								multiplier = 100 / parseFloat(node.value)
 
-							node.remove()
+								node.remove()
+							}
 						}
-					}
+					})
 				}
-			}
+			})
 
-			for (const node of rule.nodes) {
-				node.value = node.value?.replace(remMatcher, (x) => {
-					const raw = multiplier * parseFloat(x)
-					const rounded = parseFloat(raw.toFixed(3))
+			root.walkRules((rule) => {
+				rule.walk((node) => {
+					node.value = node.value?.replace(remMatcher, (x) => {
+						const raw = multiplier * parseFloat(x)
+						const rounded = parseFloat(raw.toFixed(3))
 
-					return `${rounded}rem`
+						return `${rounded}rem`
+					})
 				})
-			}
+			})
 		},
 	}
 }

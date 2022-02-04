@@ -16,8 +16,12 @@ async function run(input, output, opts = {}) {
 it('changes rem', async () => {
 	const from = `
 	:root {
+		--var-1: 2rem;
+	}
+
+	:root {
+		--var-2: 10rem;
 		font-size: 62.5%;
-		--var: 10rem;
 	}
 
 	h1 {
@@ -34,7 +38,11 @@ it('changes rem', async () => {
 
 	const to = `
 	:root {
-		--var: 16rem;
+		--var-1: 3.2rem;
+	}
+
+	:root {
+		--var-2: 16rem;
 	}
 
 	h1 {
