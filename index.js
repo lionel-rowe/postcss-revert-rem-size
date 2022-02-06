@@ -1,11 +1,16 @@
 let multiplier = 1
 
 const remMatcher = /(?<=\W|^)(?:\.?\d+|\d+\.\d+)rem\b/gi
+const ignoreMatcher = /("[^"]+"|url\([^)]+\))/
+
+const defaultOptions = { maxDecimalPlaces: 5 }
 
 /**
  * @type {import('postcss').PluginCreator}
  */
 module.exports = (opts = {}) => {
+	opts = { ...defaultOptions, ...opts }
+
 	return {
 		postcssPlugin: 'postcss-revert-rem-size',
 
@@ -15,7 +20,7 @@ module.exports = (opts = {}) => {
 					rule.walk((node) => {
 						if (node.prop === 'font-size') {
 							if (/^\d+(?:\.\d+)?%$/.test(node.value)) {
-								multiplier = 1 / (100 / parseFloat(node.value))
+								multiplier = parseFloat(node.value) / 100
 
 								node.remove()
 							}
@@ -26,12 +31,26 @@ module.exports = (opts = {}) => {
 
 			root.walkRules((rule) => {
 				rule.walk((node) => {
-					node.value = node.value?.replace(remMatcher, (x) => {
-						const raw = multiplier * parseFloat(x)
-						const rounded = parseFloat(raw.toFixed(5))
+					if (node.type === 'decl') {
+						node.value = node.value
+							.split(ignoreMatcher)
+							.map((segment, i) =>
+								i % 2
+									? segment
+									: segment.replace(remMatcher, (x) => {
+											const raw =
+												multiplier * parseFloat(x)
+											const rounded = parseFloat(
+												raw.toFixed(
+													opts.maxDecimalPlaces,
+												),
+											)
 
-						return `${rounded}rem`
-					})
+											return `${rounded}rem`
+									  }),
+							)
+							.join('')
+					}
 				})
 			})
 		},
