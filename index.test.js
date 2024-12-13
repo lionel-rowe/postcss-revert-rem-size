@@ -179,3 +179,67 @@ it('ignores `{digit}rem` in quoted props', async () => {
 
 	await run(from, to, {})
 })
+
+it('accepts a percent option', async () => {
+	const from = `
+	h1 {
+		font-size: 3.2rem;
+	}
+	`
+
+	const to = `
+	h1 {
+		font-size: 2rem;
+	}
+	`
+
+	await run(from, to, { percent: 62.5 })
+})
+
+it('throws if percent is mismatched', async () => {
+	const input = `
+	:root {
+		font-size: 62.5%;
+	}
+
+	h1 {
+		font-size: 3.2rem;
+	}
+	`
+	let err
+	try {
+		await postcss([plugin({ percent: 70 })]).process(input, {
+			from: undefined,
+		})
+	} catch (e) {
+		err = e
+	}
+
+	expect(err).toEqual(
+		new Error(
+			'root-node font-size value 62.5% does not match 70% supplied in options',
+		),
+	)
+})
+
+it('throws if percent is not supplied and none found in root node', async () => {
+	const input = `
+	h1 {
+		font-size: 3.2rem;
+	}
+	`
+	let err
+	try {
+		await postcss([plugin({})]).process(input, {
+			from: undefined,
+		})
+	} catch (e) {
+		err = e
+	}
+
+	expect(err).toEqual(
+		new Error(
+			'root-node font size not found and no opts.percent override supplied',
+		),
+	)
+})

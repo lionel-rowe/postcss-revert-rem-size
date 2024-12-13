@@ -1,15 +1,15 @@
-let multiplier = 1
-
 const remMatcher = /(?<=\W|^)(?:\.?\d+|\d+\.\d+)rem\b/gi
 const ignoreMatcher = /("[^"]+"|url\([^)]+\))/
 
-const defaultOptions = { maxDecimalPlaces: 5 }
+const defaultOptions = { percent: null, maxDecimalPlaces: 5 }
 
 /**
  * @type {import('postcss').PluginCreator}
  */
 module.exports = (opts = {}) => {
 	opts = { ...defaultOptions, ...opts }
+
+	const multiplierOverridden = opts.percent != null
 
 	return {
 		postcssPlugin: 'postcss-revert-rem-size',
@@ -20,7 +20,16 @@ module.exports = (opts = {}) => {
 					rule.walk((node) => {
 						if (node.prop === 'font-size') {
 							if (/^\d+(?:\.\d+)?%$/.test(node.value)) {
-								multiplier = parseFloat(node.value) / 100
+								if (multiplierOverridden) {
+									const val = parseFloat(node.value)
+									if (val !== opts.percent) {
+										throw new Error(
+											`root-node font-size value ${val}% does not match ${opts.percent}% supplied in options`,
+										)
+									}
+								} else {
+									opts.percent = parseFloat(node.value)
+								}
 
 								node.remove()
 							}
@@ -28,6 +37,14 @@ module.exports = (opts = {}) => {
 					})
 				}
 			})
+
+			if (opts.percent == null) {
+				throw new Error(
+					`root-node font size not found and no opts.percent override supplied`,
+				)
+			}
+
+			const multiplier = opts.percent / 100
 
 			root.walkRules((rule) => {
 				rule.walk((node) => {
@@ -47,7 +64,7 @@ module.exports = (opts = {}) => {
 											)
 
 											return `${rounded}rem`
-									  }),
+										}),
 							)
 							.join('')
 					}

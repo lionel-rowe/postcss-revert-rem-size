@@ -1,6 +1,6 @@
 {
 	"name": "postcss-revert-rem-size",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"description": "PostCSS plugin to remove font-size: 62.5% hack",
 	"keywords": [
 		"postcss",
